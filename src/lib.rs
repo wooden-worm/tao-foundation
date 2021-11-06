@@ -1,6 +1,6 @@
 use std::{ffi::c_void, path::PathBuf, ptr::null_mut, slice};
 
-use objc::{msg_send, sel, sel_impl};
+use objc::{msg_send, runtime::Class, sel, sel_impl};
 use objc_derive::selector_export;
 
 pub type id = *mut objc::runtime::Object;
@@ -10,6 +10,10 @@ pub type NSUInteger = u64;
 
 pub trait GetObjcObject {
     fn objc_object(&self) -> id;
+}
+
+extern "C" {
+    pub fn NSClassFromString(class_name: NSString) -> Class;
 }
 
 #[repr(transparent)]
