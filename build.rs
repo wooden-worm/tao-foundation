@@ -6,7 +6,7 @@ fn main() {
     if target.contains("-ios") {
         println!("cargo:rustc-link-lib=framework=UIKit");
         println!("cargo:rustc-link-lib=framework=StoreKit");
-    } else if target.contains("-macos") {
+    } else {
         println!("cargo:rustc-link-lib=framework=AppKit");
         println!("cargo:rustc-link-lib=framework=StoreKit");
     }
