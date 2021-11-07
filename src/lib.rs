@@ -1,6 +1,6 @@
 use std::{ffi::c_void, path::PathBuf, ptr::null_mut, slice};
 
-use objc::{msg_send, runtime::Class, sel, sel_impl};
+use objc::{msg_send, sel, sel_impl};
 use objc_derive::selector_export;
 
 pub type id = *mut objc::runtime::Object;
@@ -611,3 +611,27 @@ pub const NSSearchPathDomainMask_NSNetworkDomainMask: NSSearchPathDomainMask = 4
 pub const NSSearchPathDomainMask_NSSystemDomainMask: NSSearchPathDomainMask = 8;
 pub const NSSearchPathDomainMask_NSAllDomainsMask: NSSearchPathDomainMask = 65535;
 pub type NSSearchPathDomainMask = NSUInteger;
+
+
+
+#[repr(transparent)]
+#[derive(Clone)]
+pub struct Class(pub id);
+impl std::ops::Deref for Class {
+    type Target = objc::runtime::Object;
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*self.0 }
+    }
+}
+unsafe impl objc::Message for Class {}
+impl Class {
+    pub fn alloc() -> Self {
+        Self(unsafe { msg_send!(objc::class!(Class), alloc) })
+    }
+}
+
+impl GetObjcObject for Class {
+    fn objc_object(&self) -> id {
+        self.0
+    }
+}
