@@ -351,7 +351,10 @@ impl UTType {
 
 impl UTType {
     #[selector_export(UTType, "typeWithFilenameExtension:")]
-    pub fn type_with_filename_extension(filenameExtension: NSString) -> UTType;
+    pub fn type_with_filename_extension(filename_extension: NSString) -> UTType;
+
+    #[selector_export(UTType, "typeWithIdentifier:")]
+    pub fn type_with_identifier(identifier: NSString) -> UTType;
 }
 
 impl GetObjcObject for UTType {
