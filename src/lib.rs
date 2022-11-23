@@ -1,6 +1,6 @@
 use std::{ffi::c_void, path::PathBuf, ptr::null_mut, slice};
 
-use objc::{msg_send, sel, sel_impl};
+use objc::{msg_send, runtime::BOOL, sel, sel_impl};
 use objc_derive::selector_export;
 
 pub type id = *mut objc::runtime::Object;
@@ -65,7 +65,12 @@ impl NSString {
 
 impl NSString {
     #[selector_export("initWithBytes:length:encoding:")]
-    pub fn init_with_bytes_length_encoding(&self, bytes: *const c_void, length: usize, encoding: u64) -> NSString;
+    pub fn init_with_bytes_length_encoding(
+        &self,
+        bytes: *const c_void,
+        length: usize,
+        encoding: u64,
+    ) -> NSString;
 
     #[selector_export("lengthOfBytesUsingEncoding:")]
     pub fn length_of_bytes_using_encoding(&self, encoding: u64) -> usize;
@@ -157,10 +162,7 @@ impl NSArray {
             let ptr_value = raw_ptr as usize;
             let mut_ptr = ptr_value as *mut id;
 
-            let ret = NSArray::array_with_objects_count(
-                mut_ptr,
-                slice.len() as u64,
-            );
+            let ret = NSArray::array_with_objects_count(mut_ptr, slice.len() as u64);
             ret
         }
     }
@@ -315,7 +317,7 @@ impl NSURL {
 
     #[selector_export(NSURL, "fileURLWithPath:")]
     pub fn file_url_with_path(path: NSString) -> NSURL;
-    
+
     #[selector_export("absoluteString")]
     pub fn absolute_string(&self) -> NSString;
 
@@ -331,7 +333,6 @@ impl GetObjcObject for NSURL {
         self.0
     }
 }
-
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -393,7 +394,6 @@ impl GetObjcObject for NSOperationQueue {
     }
 }
 
-
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct NSUserDefaults(pub id);
@@ -423,11 +423,17 @@ impl NSUserDefaults {
     #[selector_export("integerForKey:")]
     pub fn integer_for_key(&self, key: NSString) -> NSInteger;
 
+    #[selector_export("boolForKey:")]
+    pub fn bool_for_key(&self, key: NSString) -> BOOL;
+
     #[selector_export("setObject:forKey:")]
     pub fn set_object_for_key(&self, value: id, for_key: NSString);
 
     #[selector_export("setInteger:forKey:")]
     pub fn set_integer_for_key(&self, value: NSInteger, for_key: NSString);
+
+    #[selector_export("setBool:forKey:")]
+    pub fn set_bool_for_key(&self, value: BOOL, for_key: NSString);
 
     pub fn contains_key(&self, key: &str) -> bool {
         let key = NSString::from_str(key);
@@ -446,7 +452,6 @@ impl GetObjcObject for NSUserDefaults {
         self.0
     }
 }
-
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -478,8 +483,6 @@ impl GetObjcObject for NSError {
     }
 }
 
-
-
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct NSData(pub id);
@@ -509,7 +512,6 @@ impl GetObjcObject for NSData {
         self.0
     }
 }
-
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -541,7 +543,6 @@ impl GetObjcObject for NSBundle {
     }
 }
 
-
 #[repr(transparent)]
 #[derive(Clone)]
 pub struct NSFileManager(pub id);
@@ -560,15 +561,20 @@ impl NSFileManager {
     pub fn temporary_directory(&self) -> NSURL;
 
     #[selector_export("URLsForDirectory:inDomains:")]
-    pub fn urls_for_directory_in_domains(&self, directory: NSSearchPathDirectory, domain_mask: NSSearchPathDomainMask) -> NSArray;
+    pub fn urls_for_directory_in_domains(
+        &self,
+        directory: NSSearchPathDirectory,
+        domain_mask: NSSearchPathDomainMask,
+    ) -> NSArray;
 }
 
 impl NSFileManager {
     pub fn get_documents_dir(&self) -> PathBuf {
-        let paths = self.urls_for_directory_in_domains(NSSearchPathDirectory_NSDocumentDirectory, NSSearchPathDomainMask_NSUserDomainMask);
-        let urls = paths.map(|val| {
-            NSURL(val)
-        });
+        let paths = self.urls_for_directory_in_domains(
+            NSSearchPathDirectory_NSDocumentDirectory,
+            NSSearchPathDomainMask_NSUserDomainMask,
+        );
+        let urls = paths.map(|val| NSURL(val));
         let path_string = urls[0].path().to_string();
         PathBuf::from(&path_string)
     }
@@ -614,8 +620,6 @@ pub const NSSearchPathDomainMask_NSNetworkDomainMask: NSSearchPathDomainMask = 4
 pub const NSSearchPathDomainMask_NSSystemDomainMask: NSSearchPathDomainMask = 8;
 pub const NSSearchPathDomainMask_NSAllDomainsMask: NSSearchPathDomainMask = 65535;
 pub type NSSearchPathDomainMask = NSUInteger;
-
-
 
 #[repr(transparent)]
 #[derive(Clone)]
